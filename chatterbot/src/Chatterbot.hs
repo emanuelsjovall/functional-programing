@@ -109,7 +109,7 @@ ruleCompile = undefined
 -- mkPattern '*' "Hi *!" => [Item 'H', Item 'i', Wildcard, Item '!']
 mkPattern :: Eq a => a -> [a] -> Pattern a
 {- TO BE WRITTEN -}
-mkPattern = undefined
+mkPattern wc = Pattern . map (\x -> if x == wc then Wildcard else Item x)
 
 stringToPattern :: String -> String -> Pattern String
 stringToPattern wc = mkPattern wc . words
@@ -147,13 +147,18 @@ reductionsApply = undefined
 -- Replaces a wildcard in a template with the list given as the third argument
 substitute :: Eq a => Template a -> [a] -> [a]
 {- TO BE WRITTEN -}
-substitute = undefined
+substitute (Pattern []) _ = []
+substitute (Pattern (x:xs)) sub =
+  (case x of
+    Item s -> [s]
+    Wildcard -> sub
+  ) ++ substitute (Pattern xs) sub
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
 {- TO BE WRITTEN -}
-match = undefined
+match (Pattern p) list
 
 -- Helper function to match
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
