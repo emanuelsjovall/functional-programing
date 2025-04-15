@@ -1,3 +1,4 @@
+-- Emanuel Sjövall, Rafael Holgersson
 module Chatterbot where
 import Utilities
 import System.Random
@@ -53,15 +54,18 @@ stateOfMind b =
 -- at random, and that's our bot
 makePair :: Rule -> IO (Pattern String, Template String)
 {- TO BE WRITTEN -}
-makePair = undefined
+makePair (Rule (pattern, templates)) = do
+  r <- randomIO :: IO Float
+  return (pattern, pick r templates)
 
 rulesApply :: [(Pattern String, Template String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply = undefined
+-- rulesApply list p = fromMaybe p (transformationsApply reflect list p)
+rulesApply list = try (transformationsApply reflect list)
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
-reflect = undefined
+reflect = map (\x -> fromMaybe x (lookup x reflections))
 
 reflections =
   [ ("am",     "are"),
@@ -99,7 +103,7 @@ rulesCompile = map ruleCompile
 
 ruleCompile :: (String, [String]) -> Rule
 {- TO BE WRITTEN -}
-ruleCompile = undefined
+ruleCompile (toPattern, toTemplates) = Rule (starPattern (map toLower toPattern), map starPattern toTemplates)
 
 --------------------------------------
 
@@ -137,8 +141,7 @@ reduce = reductionsApply reductions
 
 reductionsApply :: [(Pattern String, Pattern String)] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-reductionsApply = undefined
-
+reductionsApply list = fix (\x -> fromMaybe x (transformationsApply id list x))
 
 -------------------------------------------------------
 -- Match and substitute
@@ -158,7 +161,12 @@ substitute (Pattern (x:xs)) sub =
 -- bound to the wildcard in the pattern list.
 match :: Eq a => Pattern a -> [a] -> Maybe [a]
 {- TO BE WRITTEN -}
-match (Pattern p) list
+match (Pattern []) [] = Just []
+match (Pattern []) _ = Nothing
+match (Pattern _) [] = Nothing
+match (Pattern (Item i:ps)) (x:xs) = if i /= x then Nothing else match (Pattern ps) xs
+-- match (Pattern (Wildcard:ps)) xs = orElse (singleWildcardMatch (Pattern (Wildcard : ps)) xs) (longerWildcardMatch (Pattern (Wildcard : ps)) xs)
+match ps xs = orElse (singleWildcardMatch ps xs) (longerWildcardMatch ps xs)
 
 -- Helper function to match
 singleWildcardMatch, longerWildcardMatch :: Eq a => Pattern a -> [a] -> Maybe [a]
@@ -167,9 +175,10 @@ singleWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
     Nothing -> Nothing
     Just _ -> Just [x]
 {- TO BE WRITTEN -}
-longerWildcardMatch = undefined
-
-
+longerWildcardMatch (Pattern (Wildcard:ps)) (x:xs) =
+  case match (Pattern (Wildcard:ps)) xs of
+    Nothing -> Nothing
+    Just res -> Just (x : res)
 
 -------------------------------------------------------
 -- Applying patterns transformations
@@ -182,9 +191,13 @@ matchAndTransform transform pat = (mmap transform) . (match pat)
 -- Applying a single pattern
 transformationApply :: Eq a => ([a] -> [a]) -> [a] -> (Pattern a, Template a) -> Maybe [a]
 {- TO BE WRITTEN -}
-transformationApply = undefined
+transformationApply f str (pattern, template) =  mmap (substitute template) (match pattern (f str))
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => ([a] -> [a]) -> [(Pattern a, Template a)] -> [a] -> Maybe [a]
 {- TO BE WRITTEN -}
-transformationsApply = undefined
+transformationsApply _ [] _ = Nothing
+transformationsApply f (pattern:ps) str =
+  case transformationApply f str pattern of
+    Nothing -> transformationsApply f ps str
+    Just v -> Just v
