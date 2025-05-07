@@ -9,7 +9,9 @@ import Data.Maybe (fromJust)
 -- If we write a recursive function, it may be slow
 fibo :: Int -> Int
 {- TO BE WRITTEN -}
-fibo = undefined
+fibo 0 = 0
+fibo 1 = 1
+fibo n = fibo (n-1) + fibo (n-2)
 
 -- In GHCI, do,
 -- > :set +s
@@ -22,7 +24,7 @@ runSlow = fibo 30
 -- We can make it faster, by creating a cache
 -- This takes a function and creates an infinite list of the results
 -- (This works because Haskell doesn't evaluate things before we need them)
-mkCache :: (Num a , Enum a ) => (a -> b) -> [b]
+mkCache :: (Num a , Enum a) => (a -> b) -> [b]
 mkCache f = map f [0..]
 
 -- And we make a function to look for a value in a cache
@@ -57,25 +59,29 @@ runFast = fastFibo1 30
 -- We pass the function and the domain of the keys as an argument
 listCache :: [a] -> (a -> b) -> [(a, b)]
 {- TO BE WRITTEN -}
-listCache domain f = undefined
+listCache domain f = map (\x -> (x, f x)) domain
 
 -- We create a function which looks up the
 -- result in the cache
 -- and use fromJust to get an error if the cache misses.
 listLookup :: Eq a => [(a, b)] -> a -> b
 {- TO BE WRITTEN -}
-listLookup cache value = undefined
+listLookup cache value = fromJust $ lookup value cache
 
 -- Create the cache for all integers...
 -- We use a 'fast fibonacci function' even if we haven't defined it yet!
 fibCache :: [(Int, Int)]
 {- TO BE WRITTEN -}
-fibCache = undefined
+fibCache = listCache [0..] fastFibo2
 
 -- And the fast function looks in the cache!
 fastFibo2 :: Int -> Int
 {- TO BE WRITTEN -}
-fastFibo2 n = undefined
+fastFibo2 0 = 0
+fastFibo2 1 = 1
+fastFibo2 n =
+  let fib = listLookup fibCache
+  in fib (n-1) + fib (n-2)
 
 -- Pause:
 -- We make the solution in two parts:
@@ -113,13 +119,15 @@ testMemoize n =
 -- And it's easy to implement fibonacci again: (openFib fibo) does that.
 openFib :: (Int -> Int) -> Int -> Int
 {- TO BE WRITTEN -}
-openFib f n = undefined
+openFib _ 0 = 0
+openFib _ 1 = 1
+openFib f n = f (n-1) + f (n-2)
 
 -- We use openFib to create a cached function, and make sure
 -- The recursive calls call the fast version!
 fastFibo3 :: Int -> Int
 {- TO BE WRITTEN -}
-fastFibo3 = undefined
+fastFibo3 = memoizeWithList [0..] (openFib fastFibo3)
 
 -- The memoize function creates the cache and looks in it immediately
 -- And because of Lazy evaluation, we get a function that takes a slow
@@ -133,7 +141,15 @@ dropLast l = take (length l - 1) l
 
 -- Slow version
 lps :: String -> String
-lps s = undefined
+lps [] = []
+lps [x] = [x]
+lps xs
+  | head xs == last xs = [head xs] ++ lps (dropLast $ tail xs) ++ [last xs]
+  | otherwise =
+    let
+      left = lps (tail xs)
+      right = lps (dropLast xs)
+    in if length left > length right then left else right
 
 -- CACHES FOR LISTS OF THINGS
 
@@ -151,7 +167,8 @@ data Trie node edge = Trie node [(edge, Trie node edge)]
 -- First, looking for a list in a trie...
 trieLookup :: Eq e => Trie a e -> [e] -> a
 {- TO BE WRITTEN -}
-trieLookup t l = undefined
+trieLookup (Trie val _) [] = val
+trieLookup (Trie _ children) (x:xs) = trieLookup (fromJust $ lookup x children) xs
 
 -- Get a subset of a trie, with limited depth
 -- (Provided: Useful for debugging)
@@ -164,7 +181,7 @@ limitTrie n (Trie v edges) =
 -- Edge labels stay the same.
 mapTrie :: (a -> b) -> Trie a e -> Trie b e
 {- TO BE WRITTEN -}
-mapTrie f (Trie v cs) = undefined
+mapTrie f (Trie v cs) = Trie (f v) (map (\(e, t) -> (e, mapTrie f t)) cs)
 
 -- To build an infinite trie, we start from the root
 -- The root starts with the empty list...
@@ -172,7 +189,7 @@ mapTrie f (Trie v cs) = undefined
 -- The domain 'dom' defines how many edges we have per node
 rootTrie :: [a] -> Trie [a] a
 {- TO BE WRITTEN -}
-rootTrie domain = undefined
+rootTrie domain = Trie [] (edges domain [])
 
 -- How do we create the edges?
 -- We look at the domain,
@@ -183,7 +200,7 @@ rootTrie domain = undefined
 -- and the current node
 edges :: [a] -> [a] -> [(a, Trie [a] a)]
 {- TO BE WRITTEN -}
-edges domain currentNode = undefined
+edges domain currentNode = [(e, subtree domain e currentNode) | e <- domain]
 
 -- How do we build the subtree?
 -- We use the label we just followed
@@ -192,8 +209,7 @@ edges domain currentNode = undefined
 -- (using the edges function)
 subtree :: [a] -> a -> [a] -> Trie [a] a
 {- TO BE WRITTEN -}
-subtree domain label parent =
-  undefined
+subtree domain label parent = Trie (parent ++ [label]) (edges domain (parent ++ [label]))
 
 -- Important: the trie is infinite because edges calls subtree, and subtree calls edges.
 
@@ -201,7 +217,7 @@ subtree domain label parent =
 -- provided with a domain (for the list elements)
 trieCache :: [e] -> ([e] -> b) -> Trie b e
 {- TO BE WRITTEN -}
-trieCache domain function = undefined
+trieCache domain function = mapTrie function $ rootTrie domain 
 
 {--
 You can inspect the cache with GHCI!
@@ -247,12 +263,24 @@ s1 = "bananrepubliksinvasionsarmestabsadjutant"
 s2 = "kontrabasfiolfodralmakarmästarlärling"
 
 openLPS :: (String -> String) -> (String -> String)
-openLPS s = undefined -- look at 'lps' for inspiration
+openLPS _ [] = []
+openLPS _ [a] = [a]
+openLPS f s
+  | head s == last s = [head s] ++ f (dropLast $ tail s) ++ [last s]
+  | otherwise =
+    let
+      left = f (tail s)
+      right = f (dropLast s)
+    in if length left > length right then left else right
 
 -- Fast!
 fastLPS :: String -> String
-fastLPS s =
-  undefined
+fastLPS s = 
+  let cache = trieCache ['a'..'z'] (openLPS fastLPS)
+  in trieLookup cache s
+-- fastLPS s = (trieLookup . trieCache ['a'..'z']) (openLPS fastLPS) s
+
+-- fastFibo3 = memoizeWithList [0..] (openFib fastFibo3)
 
 -- So, what were the tricks?
 -- The first one is to build an infinite data-structure, to memoize the function
