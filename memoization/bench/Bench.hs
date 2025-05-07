@@ -11,6 +11,11 @@ s2 = "vintner"
 s3 = "thequickfox"
 s4 = "kingofthehill"
 
+t1 = "aferociousmonadatemyhamster"
+t2 = "functionalprogrammingrules"
+t3 = "bananrepubliksinvasionsarmestabsadjutant"
+t4 = "kontrabasfiolfodralmakarmastarlarling"
+
 main :: IO ()
 -- The defaultMain is provided by criterion
 -- We make benchmark groups
@@ -37,9 +42,15 @@ main = defaultMain [
   bgroup "lps" [ bench "writers" $ nf lps "writers",
                  bench "vintner" $ nf lps "vintner",
                  bench s3 $ nf lps s3,
-                 bench s4 $ nf lps s4],
+                 bench s4 $ nf lps s4,
+                 bench t1 $ nf lps t1,
+                 bench t2 $ nf lps t2],
   bgroup "fastLPS" [ bench "writers" $ nf fastLPS "writers",
                      bench "vintner" $ nf fastLPS "vintner",
                      bench s3 $ nf fastLPS s3,
-                     bench s4 $ nf fastLPS s4]
+                     bench s4 $ nf fastLPS s4,
+                     bench t1 $ nf fastLPS t1,
+                     bench t2 $ nf fastLPS t2,
+                     bench t3 $ nf fastLPS t3,
+                     bench t4 $ nf fastLPS t4]
   ]

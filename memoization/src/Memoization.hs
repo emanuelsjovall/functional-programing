@@ -260,6 +260,7 @@ k2 = "vintner"
 l1 = "aferociousmonadatemyhamster"
 l2 = "functionalprogrammingrules"
 s1 = "bananrepubliksinvasionsarmestabsadjutant"
+--s2 = "kontrabasfiolfodralmakarmastarlarling"
 s2 = "kontrabasfiolfodralmakarmästarlärling"
 
 openLPS :: (String -> String) -> (String -> String)
@@ -276,7 +277,8 @@ openLPS f s
 -- Fast!
 fastLPS :: String -> String
 fastLPS s = 
-  let cache = trieCache ['a'..'z'] (openLPS fastLPS)
+  let cache = trieCache (['a'..'z'] ++ ['å', 'ä', 'ö']) (openLPS fastLPS)
+  --let cache = trieCache ['a'..'z'] (openLPS fastLPS)
   in trieLookup cache s
 -- fastLPS s = (trieLookup . trieCache ['a'..'z']) (openLPS fastLPS) s
 
