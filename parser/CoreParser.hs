@@ -1,3 +1,4 @@
+-- Emanuel Sjövall & Rafael Holgersson
 module CoreParser(Parser, char, return, fail, (#), (!), (?), (#>), (>->),
                   Parse, parse, toString, fromString) where
 import Prelude hiding (return, fail)
@@ -20,13 +21,13 @@ class Parse a where
 type Parser a = String -> Maybe (a, String)
 
 char :: Parser Char
-char []= Nothing
+char [] = Nothing
 char (c:cs) = Just (c, cs)
 
 return :: a -> Parser a
 return a cs = Just (a, cs)
 
-fail ::  Parser a 
+fail :: Parser a 
 fail cs = Nothing
 
 (!) :: Parser a -> Parser a -> Parser a

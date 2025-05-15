@@ -2,8 +2,10 @@
 module TestProgram where
 
 import Program
+import System.Process.Internals (ProcessHandle(ProcessHandle))
+import Data.ByteString (toStrict)
 
-p0, p1, p2, p3, p4, p5 :: Program.T
+p0, p1, p2, p3, p4, p5, p6, p7 :: Program.T
 
 -- basic program, no comments
 
@@ -76,6 +78,12 @@ rp0 = Program.exec p0 [3,16]
 
 rp1 = Program.exec p1 [1024, 2]
 
+rp2 = Program.exec p2 [3,16]
+sp2 = putStr (toString p2)
+
+rp3 = Program.exec p3 [1024, 2]
+sp3 = putStr (toString p3)
+
 -- this time some comments and exponents
 
 s4 = "\
@@ -120,3 +128,49 @@ sp5 = putStr (toString p5)
 p6 = fromString (toString p5)
 
 sp6 =  putStr (toString p6)
+
+-- p7 = fromString ("\
+-- \read k;\
+-- \read n;\
+-- \m := 1;\
+-- \while n-m do\
+-- \  begin\
+-- \    if m - m/k*k then\
+-- \      skip;\
+-- \    else\
+-- \      -- note an exponentiation below\n\
+-- \      write m^2;\
+-- \    m := m + 1; -- an inline comment \n\
+-- \  end\
+-- \read -- yet another comment, this time inside a statement!\n\
+-- \var;")
+
+p7 = fromString ("\
+\read k;\
+\read n;\
+\m := 1;\
+\while n-m do\
+\  begin\
+\    if m - m/k*k then\
+\      skip;\
+\    else\
+\      -- note an exponentiation below\n\
+\      write m^2;\
+\    m := m + 1; -- an inline comment \n\
+\  end")
+
+-- p7 = fromString ("\
+-- \read k;\
+-- \read n;\
+-- \m := 1;\
+-- \while n-m do\
+-- \  begin\
+-- \    if m - m/k*k then\
+-- \      skip;\
+-- \    else\
+-- \      write m;\
+-- \    m := m + 1;\
+-- \  end")
+
+
+rp7 = Program.exec p7 [3, 16]

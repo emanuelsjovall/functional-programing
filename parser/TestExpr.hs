@@ -14,6 +14,9 @@ n1 = testValue "1"
 n2 = testValue "x"
 n3 = testValue "x+y"
 n4 = testValue "x-y-y"
+n5 = testValue "3*(x+y)"
+n6 = testValue "3*2^(x+y)"
+n7 = testValue "3+2*2"
 n21 = testValue "1/(2-y)" {-  Expr.value: division by 0 -}
 n31 = testValue "2+z"     {-  Expr.value: undefined variable z -}
 
@@ -27,8 +30,8 @@ p5 = testValue "2^3^4+2^5*6+7^8+9"
 
 -- p1 = 8
 -- p2 should be much larger than p3!
--- p2 = 2^81 = 2417851639229258349412352
+-- p2 = 2^81 = 2417851639229258349412352 2417851639229258349412352
 -- p3 = 8^4 = 2^12 = 4096
 -- p4 = 40
--- p5 = 2417851639229258355177354
+-- p5 = 2417851639229258355177354 2417851639229258355177354
 
